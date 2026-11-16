@@ -44,3 +44,8 @@ plumbing and copied into the trusted Outbox by the approved boundary.
 An ambiguous transport result remains ambiguous. `reconcile` compares later mail
 observations with the approved bytes; it does not invent success or repeat a send
 whose outcome is unknown.
+
+Transport stderr inherits the gate's diagnostic stream; it is never copied into
+a draft card. A failed transport call records only its numeric returncode or OS
+errno on the existing attempt before propagating the exception. Neither fact
+changes the attempt's ambiguity or authorises another send.
