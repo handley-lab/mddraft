@@ -349,12 +349,20 @@ def flush(
     )
     if before_transport:
         before_transport(payload)
-    subprocess.run(
-        [*msmtp, "-a", sender, "--", *recipients],
-        input=payload,
-        stderr=subprocess.PIPE,
-        check=True,
-    )
+    try:
+        subprocess.run(
+            [*msmtp, "-a", sender, "--", *recipients],
+            input=payload,
+            check=True,
+        )
+    except (subprocess.CalledProcessError, OSError) as error:
+        field, value = (
+            ("returncode", error.returncode)
+            if isinstance(error, subprocess.CalledProcessError)
+            else ("errno", error.errno)
+        )
+        _stamp(db, card_id, {"send_error": {field: value}}, f"transport error {mid}")
+        raise
     if after_transport:
         after_transport(payload)
     stamp = {
